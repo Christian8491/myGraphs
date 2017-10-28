@@ -23,6 +23,8 @@ int main() {
     //create_paths_list();
 
 
+    precalc();
+
    // vector<Node<int>>* nodes = graph.m_nodes;
     // min_path_between_centroids (602100, nodes, 558951);
 

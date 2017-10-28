@@ -7,6 +7,9 @@
 #include "Input.h"
 #include "AdjacencyM.h"
 #include "CGraph.h"
+#include <queue>
+#include <fstream>
+#include <algorithm>
 
 using namespace std;
 
@@ -77,6 +80,7 @@ vector<int> select_centroids(vector<int> centroids) {
     if (Nnodes == 3) centroids = centroids_2000;
     if (Nnodes == 4) centroids = centroids_5000;
     if (Nnodes == 5) centroids = centroids_10000;
+    if (Nnodes == 6) centroids = centroids_1000000;
     return centroids;
 }
 /* Indicates the quadrant when the id is a centroid */
@@ -252,7 +256,6 @@ void myDijkstra() {
         sptSet[i] = false;
     }
     dist_[src] = 0;
-
    for (int count = 0; count < V_-1; count++) {
         int u = minDistance(dist_, sptSet);
         sptSet[u] = true;
@@ -266,8 +269,150 @@ void myDijkstra() {
     printSolution(dist_, V_, parent, src);
 }
 
-
 /* ============================= CREATE LIST_ADJACENCY ================================ */
+
+struct Pair
+{
+    int nodeId;
+    int d;// dijkstra value
+
+    Pair( int nodeId, int d )
+    {
+        this->nodeId = nodeId;
+        this->d = d;
+    }
+};
+
+
+struct PairComparator
+{
+    inline bool operator() ( const Pair& p1, const Pair& p2 )
+    {
+        return p1.d > p2.d;
+    }
+};
+
+typedef std::priority_queue< Pair,
+                             vector< Pair >,
+                             PairComparator > PriorityQueue;
+
+struct ResultDijkstra
+{
+    vector<float> dists;
+    vector<int> parents;
+};
+
+ResultDijkstra dijsktra_pq( int srcId, const CGraph<int> &pGraph )
+{
+    vector<float> vDists;
+    vector<int> vParents;
+    for ( int q = 0; q < pGraph.Gsize; q++ )
+    {
+        if ( q != srcId )
+        {
+            vDists.push_back( INFINITY );
+            vParents.push_back( -1 );
+        }
+        else
+        {
+            vDists.push_back( 0 );
+            vParents.push_back( srcId );
+        }
+    }
+
+    PriorityQueue myPriorityQueue;
+
+    for ( int q = 0; q < pGraph.Gsize; q++ )
+    {
+        myPriorityQueue.push( Pair( q, vDists[q] ) );
+    }
+
+    while ( !myPriorityQueue.empty() )
+    {
+        int uId = ( myPriorityQueue.top() ).nodeId;
+        myPriorityQueue.pop();
+
+        // Traverse the adjacency list for every edge
+        Edge<int>* edge = ( *(pGraph.m_edges) )[uId];
+        while ( edge != NULL )
+        {
+            int vId = edge->id_dst;
+
+            if ( vDists[vId] > vDists[uId] + edge->cost )
+            {
+                vDists[vId] = vDists[uId] + edge->cost;
+                vParents[vId] = uId;
+                myPriorityQueue.push( Pair( vId, vDists[vId] ) );
+            }
+
+            edge = edge->next_edge;
+        }
+
+    }
+
+    ResultDijkstra result;
+    result.dists = vDists;
+    result.parents = vParents;
+
+    return result;
+}
+
+void precalc()
+{
+    cout << "precalculating ...." << endl;
+    ofstream file_out;
+    file_out.open( "/home/wilsan/_ext/myGraphs/test_precalc.txt" );
+
+    vector<int> centroids;
+    centroids = select_centroids( centroids );
+    cout << "? -> " << centroids.size() << endl;
+    for ( int q = 0; q < centroids.size(); q++ )
+    {
+        cout << "precalc for centroid " << ( q + 1 ) << endl;
+        int centroidId = centroids[q];
+        ResultDijkstra _res = dijsktra_pq( centroidId, graph );
+        for ( int p = 0; p < centroids.size(); p++ )
+        {
+            vector<int> vPath;
+
+            int vId = centroids[p];
+
+            if ( vId == centroidId )
+            {
+                vPath.push_back( vId );
+            }
+            else
+            {
+                while ( true )
+                {
+                    vPath.push_back( vId );
+                    vId = _res.parents[vId];
+
+                    if ( vId == centroidId )
+                    {
+                        vPath.push_back( vId );
+                        break;
+                    }
+                }
+            }
+                
+            std::reverse( vPath.begin(), vPath.end() );
+
+            file_out << vPath.size() - 1 << "\t";
+            for ( int s = 0; s < vPath.size(); s++ )
+            {
+                file_out << vPath[s] << " ";
+            }
+            file_out << endl;
+        }
+
+        file_out << endl;
+    }
+
+    file_out.close();
+
+    cout << "done" << endl;
+}
 
 void create_list_adjacency() {
     ofstream file_out;

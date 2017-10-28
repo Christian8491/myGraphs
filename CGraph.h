@@ -1,6 +1,8 @@
 #ifndef CGRAPH_H_INCLUDED
 #define CGRAPH_H_INCLUDED
 
+#include <cmath>
+
 /* ================================== Graph Implementation ================================= */
 
 template <typename N>
@@ -9,6 +11,7 @@ struct Edge;
 template <typename N>
 struct Node {
     int id;
+    int parentId;
     N m_data[2];
     Node(int id_, N val1, N vale2);
 };
@@ -16,6 +19,7 @@ struct Node {
 template <typename N>
 Node<N>::Node(int id_, N val1, N vale2) {
     id = id_;
+    parentId = -1;
     m_data[0] = val1;
     m_data[1] = vale2;
 }
@@ -23,6 +27,7 @@ Node<N>::Node(int id_, N val1, N vale2) {
 template <typename N>
 struct Edge {
     int id_dst;
+    float cost;
     Edge<N>* next_edge;
     Edge(int id_){id_dst = id_; next_edge = nullptr;}
 };
@@ -119,16 +124,20 @@ void CGraph<N>::InsertEdge(N id1, N id2){
 
     //if (FindEdge(id1, id2)) return;
     /* on id1 */
-    temp->next_edge = m_edges->at(id1);
+    temp = m_edges->at(id1);
     Edge<N>* newEdge = new Edge<N>(id2);
-    newEdge->next_edge = temp->next_edge;
+    float dx = ( *m_nodes )[id1].m_data[0] - ( *m_nodes )[id2].m_data[0];
+    float dy = ( *m_nodes )[id1].m_data[1] - ( *m_nodes )[id2].m_data[1];
+    newEdge->cost = sqrt( dx * dx + dy * dy );
+    newEdge->next_edge = temp;
     m_edges->at(id1) = newEdge;
 
     /* on id2 */
     //if (FindEdge(id2, id1)) return;
-    temp->next_edge = m_edges->at(id2);
+    temp = m_edges->at(id2);
     Edge<N>* newEdge2 = new Edge<N> (id1);
-    newEdge2->next_edge = temp->next_edge;
+    newEdge2->cost = newEdge->cost;
+    newEdge2->next_edge = temp;
     m_edges->at(id2) = newEdge2;
 
     //delete temp;

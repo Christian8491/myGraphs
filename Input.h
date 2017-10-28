@@ -107,7 +107,8 @@ void initializeRead() {
 
     ifstream myFile;
     if (Nnodes == 1)
-        myFile.open("D:/Graph_OpenGL/data/100points.data");
+        myFile.open("/home/wilsan/_ext/myGraphs/100points.data");
+        //myFile.open("D:/Graph_OpenGL/data/100points.data");
     else if (Nnodes == 2)
         myFile.open("D:/Graph_OpenGL/data/1000points.data");
     else if(Nnodes == 3)
@@ -115,9 +116,9 @@ void initializeRead() {
     else if (Nnodes == 4)
         myFile.open("D:/Graph_OpenGL/data/5000points.data");
     else if (Nnodes == 5)
-        myFile.open("D:/Graph_OpenGL/data/10000points.data");
+        myFile.open("/home/wilsan/_ext/myGraphs/10000points.data");
     else if (Nnodes == 6)
-        myFile.open("D:/Graph_OpenGL/data/n_data_1000000.dat");
+        myFile.open("/home/wilsan/_ext/myGraphs/1000000points.data");
     else if (Nnodes == 7)
         myFile.open("D:/Graph_OpenGL/data/n_data_5000000.dat");
     else if (Nnodes == 8)
