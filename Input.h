@@ -4,7 +4,7 @@
 #include "Commom.h"
 
 int Nnodes, ID_1 = -1, ID_2 = -1;
-int type = -1;
+int type = 5;
 
 void initializeRead() {
 
@@ -29,6 +29,7 @@ void initializeRead() {
         printf("\nEnter a number\n");
         scanf("%d", &type);
     }
+
 
     /* Select ids */
     printf("\nEnter two ids in the range:");
@@ -107,8 +108,7 @@ void initializeRead() {
 
     ifstream myFile;
     if (Nnodes == 1)
-        myFile.open("/home/wilsan/_ext/myGraphs/100points.data");
-        //myFile.open("D:/Graph_OpenGL/data/100points.data");
+        myFile.open("D:/Graph_OpenGL/data/100points.data");
     else if (Nnodes == 2)
         myFile.open("D:/Graph_OpenGL/data/1000points.data");
     else if(Nnodes == 3)
@@ -116,13 +116,13 @@ void initializeRead() {
     else if (Nnodes == 4)
         myFile.open("D:/Graph_OpenGL/data/5000points.data");
     else if (Nnodes == 5)
-        myFile.open("/home/wilsan/_ext/myGraphs/10000points.data");
+        myFile.open("D:/Graph_OpenGL/data/10000points.data");
     else if (Nnodes == 6)
-        myFile.open("/home/wilsan/_ext/myGraphs/1000000points.data");
+        myFile.open("D:/Graph_OpenGL/data/n_data_1000000.dat");
     else if (Nnodes == 7)
         myFile.open("D:/Graph_OpenGL/data/n_data_5000000.dat");
     else if (Nnodes == 8)
-        myFile.open("D:/Graph_OpenGL/data/m_data_10000000.data");
+        myFile.open("D:/Graph_OpenGL/data/n_data_10000000.data");
 
     if (myFile.fail()){
         cerr << "The file was not found" << endl;
@@ -156,12 +156,12 @@ void initializeRead() {
 
     if (graph.m_edges->at(ID_1) == nullptr) {
         printf("\nId 1 es un vértice aislado, seleccione otro\n");
-        //exit(1);
+        exit(1);
     }
 
     if (graph.m_edges->at(ID_2) == nullptr) {
         printf("\nId 2 es un vértice aislado, seleccione otro\n");
-        //exit(1);
+        exit(1);
     }
 }
 

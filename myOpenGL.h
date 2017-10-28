@@ -12,7 +12,7 @@
 #define AUX_EDGE 1.6
 #define CENTER_1 5
 #define CENTER_2 15
-#define PARAL_NOD 100               //100
+#define PARAL_NOD 50              //100
 #define RADIUS_PARAL 100
 
 int DISPLAC2 = 50;
@@ -367,7 +367,8 @@ void calculateCentroids() {
 
 /* Show the path between two selected ids (for the moment only centroids) */
 void draw_shortest_path(int id1, int id2) {
-    if (Nnodes == 6 || Nnodes == 7 || Nnodes == 8) return;
+    vector<int> centroids(SIZE_GRID);
+    centroids = select_centroids(centroids);
     glColor3f(1, 1, 1);
     vector<Node<int>>* nodes = graph.m_nodes;
     int q1 = -1, q2 = -1;                                              // Quadrants
@@ -435,7 +436,7 @@ void draw_shortest_path(int id1, int id2) {
             }
         }
         else {
-            min_path_to_centroid(id1, nodes, q1);
+            //min_path_to_centroid(id1, nodes, q1);       // OTHER HEURISTIC
 
             /* Path: from centroid of q1 to centroid of q2 */
             int num_paths = short_path_centroids[q1][q2].n_elements;
@@ -446,25 +447,25 @@ void draw_shortest_path(int id1, int id2) {
                 aux2 = short_path_centroids[q1][q2].ids[i+1];
                 glLineWidth((GLfloat)MAIN_EDGE);
                 glBegin(GL_LINES);
-                glVertex2f(nodes->at(aux1).m_data[0], nodes->at(aux1).m_data[1]);
-                glVertex2f(nodes->at(aux2).m_data[0], nodes->at(aux2).m_data[1]);
+                    glVertex2f(nodes->at(aux1).m_data[0], nodes->at(aux1).m_data[1]);
+                    glVertex2f(nodes->at(aux2).m_data[0], nodes->at(aux2).m_data[1]);
                 glEnd();
 
             }
             glLineWidth(1.0f);
 
             /* Path: from id1 to centroid of q1 */
-            glColor3f(0.953, 0.925, 0.153);
-            for (int i = 0; i < short_path_id.size() -1; i++){
-                glLineWidth((GLfloat)AUX_EDGE);                          // OTHER COLOR
+            calculate_min_path(id1, centroids[q1]);
+            glColor3f(0, 0, 1);
+            for (int i = 0; i < min_path_between_id_to_centroid.size() -1; i++){
+                glLineWidth((GLfloat)AUX_EDGE);
                 glBegin(GL_LINES);
-                glVertex2f(nodes->at(short_path_id[i]).m_data[0], nodes->at(short_path_id[i]).m_data[1]);
-                glVertex2f(nodes->at(short_path_id[i+1]).m_data[0], nodes->at(short_path_id[i+1]).m_data[1]);
+                glVertex2f(nodes->at(min_path_between_id_to_centroid[i]).m_data[0], nodes->at(min_path_between_id_to_centroid[i]).m_data[1]);
+                glVertex2f(nodes->at(min_path_between_id_to_centroid[i+1]).m_data[0], nodes->at(min_path_between_id_to_centroid[i+1]).m_data[1]);
                 glEnd();
             }
             glLineWidth(1.0f);
         }
-
     }
 
     /* Case N 3 - id1 is a centroid */
@@ -508,7 +509,7 @@ void draw_shortest_path(int id1, int id2) {
             }
         }
         else {
-            min_path_to_centroid(id2, nodes, q2);
+            //min_path_to_centroid(id2, nodes, q2);     // OTHER HEURISTIC
 
             /* Path: from centroid of q1 to centroid of q2 */
             int num_paths = short_path_centroids[q1][q2].n_elements;
@@ -526,18 +527,19 @@ void draw_shortest_path(int id1, int id2) {
             }
             glLineWidth(1.0f);
 
-            /* Path: from id2 to centroid 2 */
-            glColor3f(0.953, 0.925, 0.153);
-            for (int i = 0; i < short_path_id.size() -1; i++){
-                glLineWidth((GLfloat)AUX_EDGE);                          // OTHER COLOR
+            /* Path: from id2 to centroid of q2 */
+           calculate_min_path(id2, centroids[q2]);
+           glColor3f(0, 0, 1);
+           for (int i = 0; i < min_path_between_id_to_centroid.size() -1; i++){
+                glLineWidth((GLfloat)AUX_EDGE);
                 glBegin(GL_LINES);
-                glVertex2f(nodes->at(short_path_id[i]).m_data[0], nodes->at(short_path_id[i]).m_data[1]);
-                glVertex2f(nodes->at(short_path_id[i+1]).m_data[0], nodes->at(short_path_id[i+1]).m_data[1]);
+                glVertex2f(nodes->at(min_path_between_id_to_centroid[i]).m_data[0], nodes->at(min_path_between_id_to_centroid[i]).m_data[1]);
+                glVertex2f(nodes->at(min_path_between_id_to_centroid[i+1]).m_data[0], nodes->at(min_path_between_id_to_centroid[i+1]).m_data[1]);
                 glEnd();
             }
+            glLineWidth(1.0f);
         }
 
-        glLineWidth(1.0f);
     }
 
     /* Case N 4 - There is not Centroids */
@@ -581,7 +583,6 @@ void draw_shortest_path(int id1, int id2) {
                 glEnd();
             }
             glLineWidth(1.0f);
-
         }
 
         /* id2 belongs q2->q1 and id1 not belongs q2->q1 */
@@ -603,17 +604,17 @@ void draw_shortest_path(int id1, int id2) {
             glLineWidth(1.0f);
 
             /* Path: id1 to centroid of q1 */
-            min_path_to_centroid(id1, nodes, q1);
-            glColor3f(0.953, 0.925, 0.153);
-            for (int i = 0; i < short_path_id.size() -1; i++){
+            //min_path_to_centroid(id1, nodes, q1);            // OTHER HEURISTIC
+            calculate_min_path(id1, centroids[q1]);
+            glColor3f(0, 0, 1);
+            for (int i = 0; i < min_path_between_id_to_centroid.size() -1; i++){
                 glLineWidth((GLfloat)AUX_EDGE);
                 glBegin(GL_LINES);
-                    glVertex2f(nodes->at(short_path_id[i]).m_data[0], nodes->at(short_path_id[i]).m_data[1]);
-                    glVertex2f(nodes->at(short_path_id[i+1]).m_data[0], nodes->at(short_path_id[i+1]).m_data[1]);
+                glVertex2f(nodes->at(min_path_between_id_to_centroid[i]).m_data[0], nodes->at(min_path_between_id_to_centroid[i]).m_data[1]);
+                glVertex2f(nodes->at(min_path_between_id_to_centroid[i+1]).m_data[0], nodes->at(min_path_between_id_to_centroid[i+1]).m_data[1]);
                 glEnd();
             }
             glLineWidth(1.0f);
-
         }
 
         /* id1 belongs q1->q2 and id2 not belongs q1->q2 */
@@ -635,13 +636,14 @@ void draw_shortest_path(int id1, int id2) {
             glLineWidth(1.0f);
 
             /* Path: id2 to centroid of q2 */
-            min_path_to_centroid(id2, nodes, q2);
-            glColor3f(0.953, 0.925, 0.153);
-            for (int i = 0; i < short_path_id.size() -1; i++){
+            //min_path_to_centroid(id2, nodes, q2);       // OTHER HEURISTIC
+            calculate_min_path(id2, centroids[q2]);
+            glColor3f(0, 0, 1);
+            for (int i = 0; i < min_path_between_id_to_centroid.size() -1; i++){
                 glLineWidth((GLfloat)AUX_EDGE);
                 glBegin(GL_LINES);
-                    glVertex2f(nodes->at(short_path_id[i]).m_data[0], nodes->at(short_path_id[i]).m_data[1]);
-                    glVertex2f(nodes->at(short_path_id[i+1]).m_data[0], nodes->at(short_path_id[i+1]).m_data[1]);
+                glVertex2f(nodes->at(min_path_between_id_to_centroid[i]).m_data[0], nodes->at(min_path_between_id_to_centroid[i]).m_data[1]);
+                glVertex2f(nodes->at(min_path_between_id_to_centroid[i+1]).m_data[0], nodes->at(min_path_between_id_to_centroid[i+1]).m_data[1]);
                 glEnd();
             }
             glLineWidth(1.0f);
@@ -667,13 +669,14 @@ void draw_shortest_path(int id1, int id2) {
             glLineWidth(1.0f);
 
            /* Path: id1 to centroid of q1 */
-            min_path_to_centroid(id1, nodes, q1);
-            glColor3f(0.953, 0.925, 0.153);
-            for (int i = 0; i < short_path_id.size() -1; i++){
+            //min_path_to_centroid(id1, nodes, q1);           // OTHER HEURISTIC
+            calculate_min_path(id1, centroids[q1]);
+            glColor3f(0, 0, 1);
+            for (int i = 0; i < min_path_between_id_to_centroid.size() -1; i++){
                 glLineWidth((GLfloat)AUX_EDGE);
                 glBegin(GL_LINES);
-                    glVertex2f(nodes->at(short_path_id[i]).m_data[0], nodes->at(short_path_id[i]).m_data[1]);
-                    glVertex2f(nodes->at(short_path_id[i+1]).m_data[0], nodes->at(short_path_id[i+1]).m_data[1]);
+                glVertex2f(nodes->at(min_path_between_id_to_centroid[i]).m_data[0], nodes->at(min_path_between_id_to_centroid[i]).m_data[1]);
+                glVertex2f(nodes->at(min_path_between_id_to_centroid[i+1]).m_data[0], nodes->at(min_path_between_id_to_centroid[i+1]).m_data[1]);
                 glEnd();
             }
             glLineWidth(1.0f);
@@ -699,13 +702,14 @@ void draw_shortest_path(int id1, int id2) {
             glLineWidth(1.0f);
 
            /* Path: id2 to centroid of q2 */
-            min_path_to_centroid(id2, nodes, q2);
-            glColor3f(0.953, 0.925, 0.153);
-            for (int i = 0; i < short_path_id.size() -1; i++){
+            //min_path_to_centroid(id2, nodes, q2);               // OTHER HEURISTIC
+            calculate_min_path(id2, centroids[q2]);
+            glColor3f(0, 0, 1);
+            for (int i = 0; i < min_path_between_id_to_centroid.size() -1; i++){
                 glLineWidth((GLfloat)AUX_EDGE);
                 glBegin(GL_LINES);
-                    glVertex2f(nodes->at(short_path_id[i]).m_data[0], nodes->at(short_path_id[i]).m_data[1]);
-                    glVertex2f(nodes->at(short_path_id[i+1]).m_data[0], nodes->at(short_path_id[i+1]).m_data[1]);
+                glVertex2f(nodes->at(min_path_between_id_to_centroid[i]).m_data[0], nodes->at(min_path_between_id_to_centroid[i]).m_data[1]);
+                glVertex2f(nodes->at(min_path_between_id_to_centroid[i+1]).m_data[0], nodes->at(min_path_between_id_to_centroid[i+1]).m_data[1]);
                 glEnd();
             }
             glLineWidth(1.0f);
@@ -715,25 +719,27 @@ void draw_shortest_path(int id1, int id2) {
         /* id1 not belongs {q1->q2, q2->q1} and id2 not belongs {q1->q2, q2->q1}*/
         else {
             /* Path: id2 to centroid of q2 */
-            min_path_to_centroid(id2, nodes, q2);
-            glColor3f(0.953, 0.925, 0.153);
-            for (int i = 0; i < short_path_id.size() -1; i++){
-                glLineWidth((GLfloat)AUX_EDGE);                          // OTHER COLOR
+            //min_path_to_centroid(id2, nodes, q2);                       // OTHER HEURISTIC
+            calculate_min_path(id2, centroids[q2]);
+            glColor3f(0, 0, 1);
+            for (int i = 0; i < min_path_between_id_to_centroid.size() -1; i++){
+                glLineWidth((GLfloat)AUX_EDGE);
                 glBegin(GL_LINES);
-                glVertex2f(nodes->at(short_path_id[i]).m_data[0], nodes->at(short_path_id[i]).m_data[1]);
-                glVertex2f(nodes->at(short_path_id[i+1]).m_data[0], nodes->at(short_path_id[i+1]).m_data[1]);
+                glVertex2f(nodes->at(min_path_between_id_to_centroid[i]).m_data[0], nodes->at(min_path_between_id_to_centroid[i]).m_data[1]);
+                glVertex2f(nodes->at(min_path_between_id_to_centroid[i+1]).m_data[0], nodes->at(min_path_between_id_to_centroid[i+1]).m_data[1]);
                 glEnd();
             }
             glLineWidth(1.0f);
 
             /* Path: id1 to centroid of q1 */
-            min_path_to_centroid(id1, nodes, q1);
-            glColor3f(0.953, 0.925, 0.153);
-            for (int i = 0; i < short_path_id.size() -1; i++){
-                glLineWidth((GLfloat)AUX_EDGE);                          // OTHER COLOR
+            //min_path_to_centroid(id1, nodes, q1);                   // OTHER HEURISTIC
+            calculate_min_path(id1, centroids[q1]);
+            glColor3f(0, 0, 1);
+            for (int i = 0; i < min_path_between_id_to_centroid.size() -1; i++){
+                glLineWidth((GLfloat)AUX_EDGE);
                 glBegin(GL_LINES);
-                glVertex2f(nodes->at(short_path_id[i]).m_data[0], nodes->at(short_path_id[i]).m_data[1]);
-                glVertex2f(nodes->at(short_path_id[i+1]).m_data[0], nodes->at(short_path_id[i+1]).m_data[1]);
+                glVertex2f(nodes->at(min_path_between_id_to_centroid[i]).m_data[0], nodes->at(min_path_between_id_to_centroid[i]).m_data[1]);
+                glVertex2f(nodes->at(min_path_between_id_to_centroid[i+1]).m_data[0], nodes->at(min_path_between_id_to_centroid[i+1]).m_data[1]);
                 glEnd();
             }
             glLineWidth(1.0f);
@@ -757,6 +763,20 @@ void draw_shortest_path(int id1, int id2) {
     }
 }
 
+/*
+void draw_path_moment(vector<int> min_path) {
+    glColor3f(0, 0, 1);
+    for (int i = 0; i < min_path.size()-1; i++) {
+        glLineWidth((GLfloat)1.8);
+        glBegin(GL_LINES);
+            glVertex2i(graph.m_nodes->at(min_path[i]).m_data[0], graph.m_nodes->at(min_path[i]).m_data[1]);
+            glVertex2i(graph.m_nodes->at(min_path[i+1]).m_data[0], graph.m_nodes->at(min_path[i+1]).m_data[1]);
+        glEnd();
+    }
+    glLineWidth(1.0f);
+    glFlush();
+}
+*/
 void screen() {
     /* Draw Quadrants, Edges (lines) , Vertex (circles) and Ids (start - end) */
     clock_t start, end;
@@ -766,15 +786,16 @@ void screen() {
     draw_quadrant();
     draw_centroids();
     draw_ids();
+
     cout << "\nDraw Time: " << 1000.0 * (double)(clock() - start)/(double)CLOCKS_PER_SEC << " ms.\n";
 
     /* Draw the shortest path between two any ids - and calculate the time*/
     start = clock();
-    if (type == 0) {
+    if (type == 5 || type == 0) {
         draw_shortest_path(ID_1, ID_2);
         cout << "Find the path Serial Time: " << 1000.0 * (double)(clock() - start)/(double)CLOCKS_PER_SEC << " ms.\n";
     }
-    else if (type = 1 && Nnodes != 7 && Nnodes != 6) {
+    else if (type = 1 && Nnodes != 7 && Nnodes != 8) {
         vector<int> nodes_1(PARAL_NOD);
         vector<int> nodes_2(PARAL_NOD);
 

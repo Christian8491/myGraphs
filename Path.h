@@ -1,19 +1,15 @@
 #ifndef PATH_H_INCLUDED
 #define PATH_H_INCLUDED
 
-#include <iostream>
-#include <vector>
-#include <limits.h>
+#include "Commom.h"
 #include "Input.h"
 #include "AdjacencyM.h"
 #include "CGraph.h"
-#include <queue>
-#include <fstream>
-#include <algorithm>
 
 using namespace std;
 
 #define SIZE_GRID 16
+#define FACTOR 1000
 
 struct Path {
     int n_elements;
@@ -34,26 +30,23 @@ vector<int> centroids_10000000 = {453641,1977436,4396154,413726,972556,2996705,6
 
 vector<vector<Path>> short_path_centroids (SIZE_GRID, vector<Path>(SIZE_GRID));
 vector<int> short_path_id;
-
-vector<int> short_path_between_centroids;
+vector<int> min_path_between_id_to_centroid;            // Path: id1 -> q1
+vector<int> short_path_between_centroids;               // Path: q2  -> q2
 
 /* Shortest path among all centroids */
 void createShortestPath() {
     int k, aux;
     ifstream myfile;
 
-    if (Nnodes == 1) myfile.open("D:/Graph_OpenGL/data/matrix_paths/100_paths.txt");
+    if (Nnodes == 1) myfile.open("D:/Graph_OpenGL/data/matrix_paths/test_precalc.txt");
     if (Nnodes == 2) myfile.open("D:/Graph_OpenGL/data/matrix_paths/1000_paths.txt");
     if (Nnodes == 3) myfile.open("D:/Graph_OpenGL/data/matrix_paths/2000_paths.txt");
     if (Nnodes == 4) myfile.open("D:/Graph_OpenGL/data/matrix_paths/5000_paths.txt");
-    if (Nnodes == 5) myfile.open("D:/Graph_OpenGL/data/matrix_paths/10000_paths.txt");
-    if (Nnodes == 6) return;
-    if (Nnodes == 7) return;
-    if (Nnodes == 8) return;
-    /*
-    if (Nnodes == 6) myfile.open("D:/Graph_OpenGL/data/matrix_paths/500k_paths.txt");
-    if (Nnodes == 7) myfile.open("D:/Graph_OpenGL/data/matrix_paths/1m_paths.txt");
-    */
+    if (Nnodes == 5) myfile.open("D:/Graph_OpenGL/data/matrix_paths/test_precalc10000.txt");
+    if (Nnodes == 6) myfile.open("D:/Graph_OpenGL/data/matrix_paths/test_precalc1000000.txt");
+    if (Nnodes == 7) myfile.open("D:/Graph_OpenGL/data/matrix_paths/test_precalc5000000.txt");
+    if (Nnodes == 8) myfile.open("D:/Graph_OpenGL/data/matrix_paths/test_precalc10000000.txt");
+
     for (int i = 0; i < SIZE_GRID; i++) {
         for (int j = 0; j < SIZE_GRID; j++) {
             myfile >> k;
@@ -81,8 +74,11 @@ vector<int> select_centroids(vector<int> centroids) {
     if (Nnodes == 4) centroids = centroids_5000;
     if (Nnodes == 5) centroids = centroids_10000;
     if (Nnodes == 6) centroids = centroids_1000000;
+    if (Nnodes == 7) centroids = centroids_5000000;
+    if (Nnodes == 8) centroids = centroids_10000000;
     return centroids;
 }
+
 /* Indicates the quadrant when the id is a centroid */
 int num_quadr(int id) {
     vector<int> centroids(SIZE_GRID);
@@ -121,10 +117,8 @@ int quadrant_of_centroid_near(int id) {
     }
     return q;
 }
-
+/*
 void min_path_between_centroids (int q1, vector<Node<int>>* nodes, int q2) {
-    cout << "SDASd" << endl;
-
     short_path_between_centroids.clear();
     short_path_between_centroids.push_back(q1);
     Edge<int>* edges = graph.m_edges->at(q1);
@@ -156,38 +150,8 @@ void min_path_between_centroids (int q1, vector<Node<int>>* nodes, int q2) {
 
     //for (int i = 0; i < short_path_id.size(); i++) cout << short_path_id[i] << endl;
 }
+*/
 
-void min_path_to_centroid(int id, vector<Node<int>>* nodes, int q) {
-    short_path_id.clear();
-    vector<int> centroids(SIZE_GRID);
-    centroids = select_centroids(centroids);
-
-    int min_dist = euclidean_d(nodes->at(id).m_data[0], nodes->at(id).m_data[1], nodes->at(centroids[0]).m_data[0],nodes->at(centroids[0]).m_data[1]);
-    Edge<int>* edge2 = graph.m_edges->at(id);
-    int x1 = nodes->at(centroids[q]).m_data[0];
-    int y1 = nodes->at(centroids[q]).m_data[1];
-    short_path_id.push_back(id);
-
-    int id_edges = edge2->id_dst;
-    int id_nodes = id;
-    int id_best = id;
-
-    while (min_dist != 0) {
-        while(edge2!= nullptr) {
-            if (euclidean_d(nodes->at(edge2->id_dst).m_data[0], nodes->at(edge2->id_dst).m_data[1], x1, y1) < min_dist) {
-                min_dist = euclidean_d(nodes->at(edge2->id_dst).m_data[0], nodes->at(edge2->id_dst).m_data[1], x1, y1);
-                id_best = edge2->id_dst;
-            }
-            edge2 = edge2->next_edge;
-        }
-
-        edge2 = graph.m_edges->at(id_best);
-        id_nodes = id_best;
-        short_path_id.push_back(id_best);
-        id_edges = edge2->id_dst;
-    }
-    /* MEJORAR SI HAY UNA DISTANCIA CORTA ENTRE UN ID Y LOS PATH ENTRE CENTROIDES */
-}
 
 /* ==================================== DIJKSTRA ======================================== */
 /*
@@ -269,85 +233,55 @@ void myDijkstra() {
     printSolution(dist_, V_, parent, src);
 }
 
-/* ============================= CREATE LIST_ADJACENCY ================================ */
+/* ============================= PRE - CALCULUS - MATRIX PATHS ================================ */
 
-struct Pair
-{
+struct Pair {
     int nodeId;
-    int d;// dijkstra value
-
-    Pair( int nodeId, int d )
-    {
-        this->nodeId = nodeId;
-        this->d = d;
-    }
+    int d;
+    Pair(int nodeId_, int d_) {nodeId = nodeId_; d = d_;}
 };
 
-
-struct PairComparator
-{
-    inline bool operator() ( const Pair& p1, const Pair& p2 )
-    {
-        return p1.d > p2.d;
-    }
+struct PairComparator {
+    inline bool operator() (const Pair& p1, const Pair& p2) { return p1.d > p2.d; }
 };
 
-typedef std::priority_queue< Pair,
-                             vector< Pair >,
-                             PairComparator > PriorityQueue;
+typedef std::priority_queue<Pair, vector<Pair>, PairComparator> PriorityQueue;
 
-struct ResultDijkstra
-{
+struct ResultDijkstra {
     vector<float> dists;
     vector<int> parents;
 };
 
-ResultDijkstra dijsktra_pq( int srcId, const CGraph<int> &pGraph )
-{
-    vector<float> vDists;
-    vector<int> vParents;
-    for ( int q = 0; q < pGraph.Gsize; q++ )
-    {
-        if ( q != srcId )
-        {
-            vDists.push_back( INFINITY );
-            vParents.push_back( -1 );
-        }
-        else
-        {
-            vDists.push_back( 0 );
-            vParents.push_back( srcId );
-        }
-    }
+ResultDijkstra dijsktra_pq(int srcId, const CGraph<int> &pGraph) {
+    /* Initialize */
+    vector<float> vDists(pGraph.Gsize, INFINITY);
+    vector<int> vParents(pGraph.Gsize, -1);
+
+    vDists[srcId] = 0;
+    vParents[srcId] = srcId;
 
     PriorityQueue myPriorityQueue;
+    const int _size = pGraph.Gsize/FACTOR;
 
-    for ( int q = 0; q < pGraph.Gsize; q++ )
-    {
-        myPriorityQueue.push( Pair( q, vDists[q] ) );
+    for (int i = 0; i < _size ; i++) {
+        myPriorityQueue.push(Pair(i, vDists[i]));
     }
 
-    while ( !myPriorityQueue.empty() )
-    {
-        int uId = ( myPriorityQueue.top() ).nodeId;
+    while (!myPriorityQueue.empty()) {
+        int uId = (myPriorityQueue.top()).nodeId;
         myPriorityQueue.pop();
 
-        // Traverse the adjacency list for every edge
-        Edge<int>* edge = ( *(pGraph.m_edges) )[uId];
-        while ( edge != NULL )
-        {
+        /* Traverse the adjacency list for every edge */
+        Edge<int>* edge = pGraph.m_edges->at(uId);
+        while (edge != nullptr) {
             int vId = edge->id_dst;
-
-            if ( vDists[vId] > vDists[uId] + edge->cost )
-            {
+            if (vDists[vId] > vDists[uId] + edge->cost) {
                 vDists[vId] = vDists[uId] + edge->cost;
                 vParents[vId] = uId;
-                myPriorityQueue.push( Pair( vId, vDists[vId] ) );
+                myPriorityQueue.push(Pair( vId, vDists[vId]));
             }
-
             edge = edge->next_edge;
         }
-
     }
 
     ResultDijkstra result;
@@ -357,62 +291,120 @@ ResultDijkstra dijsktra_pq( int srcId, const CGraph<int> &pGraph )
     return result;
 }
 
-void precalc()
-{
-    cout << "precalculating ...." << endl;
+/* To pre-calculus */
+void pre_calculus() {
     ofstream file_out;
-    file_out.open( "/home/wilsan/_ext/myGraphs/test_precalc.txt" );
+    file_out.open( "D:/Graph_OpenGL/data/matrix_paths/test_precalc10000000.txt" );
 
     vector<int> centroids;
-    centroids = select_centroids( centroids );
-    cout << "? -> " << centroids.size() << endl;
-    for ( int q = 0; q < centroids.size(); q++ )
-    {
-        cout << "precalc for centroid " << ( q + 1 ) << endl;
-        int centroidId = centroids[q];
-        ResultDijkstra _res = dijsktra_pq( centroidId, graph );
-        for ( int p = 0; p < centroids.size(); p++ )
-        {
-            vector<int> vPath;
+    centroids = select_centroids(centroids);
 
+    for (int q = 0; q < centroids.size(); q++) {
+        cout << "pre calculus for centroid " << (q + 1) << endl;
+        int centroidId = centroids[q];
+        ResultDijkstra _res = dijsktra_pq(centroidId, graph);
+        for (int p = 0; p < centroids.size(); p++) {
+            vector<int> vPath;
             int vId = centroids[p];
 
-            if ( vId == centroidId )
-            {
-                vPath.push_back( vId );
-            }
-            else
-            {
-                while ( true )
-                {
-                    vPath.push_back( vId );
+            if (vId == centroidId) vPath.push_back(vId);
+            else {
+                while (true) {
+                    vPath.push_back(vId);
                     vId = _res.parents[vId];
 
-                    if ( vId == centroidId )
-                    {
-                        vPath.push_back( vId );
+                    if (vId == centroidId) {
+                        vPath.push_back(vId);
                         break;
                     }
                 }
             }
-                
-            std::reverse( vPath.begin(), vPath.end() );
 
+            std::reverse(vPath.begin(), vPath.end());
             file_out << vPath.size() - 1 << "\t";
-            for ( int s = 0; s < vPath.size(); s++ )
-            {
+            for (int s = 0; s < vPath.size(); s++) {
                 file_out << vPath[s] << " ";
             }
             file_out << endl;
         }
-
         file_out << endl;
     }
-
     file_out.close();
 
     cout << "done" << endl;
 }
+
+
+/* Path between id an his centroid */
+void min_path_to_centroid(int id, vector<Node<int>>* nodes, int q) {
+    short_path_id.clear();
+    vector<int> centroids(SIZE_GRID);
+    centroids = select_centroids(centroids);
+
+    int x1 = nodes->at(q).m_data[0];
+    int y1 = nodes->at(q).m_data[1];
+
+    int min_dist = euclidean_d(nodes->at(id).m_data[0], nodes->at(id).m_data[1], x1, y1);
+    cout << "min_dist: "  << min_dist << endl;
+    Edge<int>* edges = graph.m_edges->at(id);
+    short_path_id.push_back(id);
+    int id_best = id, id_best2 = id;
+    int dist_aux, cont = 0;
+    int id_aux;
+
+    while (min_dist != 0 && cont < 10000) {
+        while(edges!= nullptr) {
+            dist_aux =  euclidean_d(nodes->at(edges->id_dst).m_data[0], nodes->at(edges->id_dst).m_data[1], x1, y1);
+            if (dist_aux < min_dist) {
+                min_dist = dist_aux;
+                id_best = edges->id_dst;
+            }
+            edges = edges->next_edge;
+        }
+        cont++;
+
+        edges = graph.m_edges->at(id_best);
+        short_path_id.push_back(id_best);
+        id_best2 = id_best;
+/*
+        if (id_best2 != id_best) {
+            edges = graph.m_edges->at(id_best);
+            short_path_id.push_back(id_best);
+            id_best2 = id_best;
+            cont = 0;
+        } else {
+            edges = graph.m_edges->at(id_best);
+            id_aux = edges->id_dst;
+            min_dist = euclidean_d(graph.m_nodes->at(id_aux).m_data[0],graph.m_nodes->at(id_aux).m_data[1], x1,y1);
+        }
+*/
+    }
+
+    cout << "min_dist: "  << min_dist << endl;
+    cout << "short_path_id: " << short_path_id.size() << endl;
+}
+
+/* Calculate the min path between two points -- NOT OPTIMAL */
+void calculate_min_path(int id, int q) {
+    min_path_between_id_to_centroid.clear();
+    clock_t start;
+    start = clock();
+
+    ResultDijkstra _res = dijsktra_pq(id, graph);
+    while (true) {
+        min_path_between_id_to_centroid.push_back(q);
+        q = _res.parents[q];
+
+        if (q == id) {
+            min_path_between_id_to_centroid.push_back(q);
+            break;
+        }
+    }
+
+    cout << "Find Path id to Centroid Time: " << 1000.0 * (double)(clock() - start)/(double)CLOCKS_PER_SEC << " ms.\n";
+}
+
+/* =========================== CREATE LIST ADJACENCY =================================== */
 
 void create_list_adjacency() {
     ofstream file_out;
@@ -427,20 +419,18 @@ void create_list_adjacency() {
             file_out << " ";
             edges = edges->next_edge;
         }
-        //file_out << -1;           // Optional
         file_out << "\n";
     }
-
     file_out.close();
-
 }
 
 /* =========================== CREATE DIJSKTRA MATRIX =================================== */
-//const int T = 470246;
-//int graphDijkstra[T][1000];
+/*
+const int T = 470246;
+int graphDijkstra[T][1000];
 
 void create_dijktra_file() {
-/*
+
     int** graphDijkstra = new int*[T];
     for(int i = 0; i < T; ++i)
         graphDijkstra[i] = new int[1000];
@@ -474,120 +464,7 @@ void create_dijktra_file() {
             out_file << graphDijkstra[i][j];
         }
     }
-
+}
 */
-}
-
-
-/* ========================================== CREATE PATHS ============================== */
-
-int minDistance(int dist[], bool sptSet[]) {
-    int min = INT_MAX, min_index;
-
-    for (int v = 0; v < Nnodes; v++)
-        if (sptSet[v] == false && dist[v] <= min)
-            min = dist[v], min_index = v;
-    return min_index;
-}
-
-
-void printPath(int parent[], int j) {
-    if (parent[j]==-1) return;
-    printPath(parent, parent[j]);
-    printf("%d ", j);
-}
-
-
-int printSolution(int dist[], int n, int parent[]) {
-    int src = 0;
-    printf("Vertex\t  Distance\tPath");
-    for (int i = 0; i < n; i++) {
-        printf("\n%d -> %d \t\t %d\t\t%d ", src, i, dist[i], src);
-        printPath(parent, i);
-    }
-}
-
-
-void dijkstra(vector<vector<int>> graph, int src, int size) {
-    int dist[size];
-    bool sptSet[size];
-    int parent[size];
-
-    parent[src] = -1;
-    for (int i = 0; i < size; i++) {
-        dist[i] = INT_MAX;
-        sptSet[i] = false;
-    }
-
-    dist[src] = 0;
-    int p = 0;
-
-    for (int count = 0; count < size; count++) {
-        int u = minDistance(dist, sptSet);
-        sptSet[u] = true;
-
-        for (int k = 0; k < size; k++) {
-            for (int i = 1; i < graph[k].size(); i++) {
-                if (k == graph[p][i]) {
-                    if (!sptSet[k] && dist[u] + 1 < dist[k]) {
-                        parent[k] = u;
-                        dist[k] = dist[u] + 1;        // + 1
-                    }
-                }
-            }
-        }
-        p++;
-
-    }
-
-    printSolution(dist, size, parent);
-}
-
-void create_paths_list() {
-    /* Let us create the example graph discussed above */
-/*
-    int size = Nnodes;
-    vector<vector<int>> graph (size);
-
-    ifstream readile;
-    readile.open("D:/Graph_OpenGL/data/List_Adjacency/5k_list_Adj_1.txt");
-*/
-
-    vector<vector<int>> graph (9);
-    for (int i = 0; i < 9; i++) {
-        graph[i].push_back(i);
-    }
-
-    graph[0].push_back(1); graph[0].push_back(7);
-    graph[1].push_back(0); graph[1].push_back(2); graph[1].push_back(7);
-    graph[2].push_back(1); graph[2].push_back(3); graph[2].push_back(5); graph[2].push_back(8);
-    graph[3].push_back(2); graph[3].push_back(4); graph[3].push_back(5);
-    graph[4].push_back(3); graph[4].push_back(5);
-    graph[5].push_back(2); graph[5].push_back(3); graph[5].push_back(4); graph[5].push_back(6);
-    graph[6].push_back(5); graph[6].push_back(7); graph[6].push_back(8);
-    graph[7].push_back(0); graph[7].push_back(1); graph[7].push_back(6); graph[7].push_back(8);
-    graph[8].push_back(2); graph[8].push_back(6); graph[8].push_back(7);
-/*
-    int ids, j;
-    for (int i = 5; i < 6; i++) {
-        readile >> ids;
-        readile >> j;
-        while(j != -1) {
-            graph[i].push_back(j);
-            readile >> j;
-        }
-    }
-
-    //cout << graph[65][1] << endl;
-    cout << graph[0][2] << endl;
-    cout << graph[0][3] << endl;
-    cout << graph[0][4] << endl;
-
-    cout << graph[1][1] << endl;
-    cout << graph[1][2] << endl;
-*/
-    dijkstra(graph, 0, 9);
-
-}
 
 #endif // PATH_H_INCLUDED

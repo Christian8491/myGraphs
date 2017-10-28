@@ -1,7 +1,7 @@
 #ifndef COMMOM_H_INCLUDED
 #define COMMOM_H_INCLUDED
 
-//#include <windows.h>
+#include <windows.h>
 #include <GL/glut.h>
 #include <cmath>
 #include <string>
@@ -11,6 +11,9 @@
 #include <iostream>
 #include <time.h>
 #include <omp.h>
+#include <limits.h>
+#include <queue>
+#include <algorithm>
 
 using namespace std;
 

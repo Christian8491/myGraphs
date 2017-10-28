@@ -19,18 +19,10 @@ int main() {
     initializeRead();
 
     /* To search and find the shortest path between two any ids */
-    //createShortestPath();
-    //create_paths_list();
-
-
-    precalc();
-
-   // vector<Node<int>>* nodes = graph.m_nodes;
-    // min_path_between_centroids (602100, nodes, 558951);
-
+    createShortestPath();
 
     /* To drawn the graph */
-    //initializeOpenGL();
+    initializeOpenGL();
 
     return 0;
 }

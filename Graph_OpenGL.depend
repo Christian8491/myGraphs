@@ -336,3 +336,47 @@
 	"Input.h"
 	"Commom.h"
 
+1509206429 source:c:\users\lab-maestria-12.helpdesk-pc\documents\mygraph\mygraphs\main.cpp
+	"Commom.h"
+	"CGraph.h"
+	"Path.h"
+	"AdjacencyM.h"
+	"myOpenGL.h"
+	"Input.h"
+
+1509211189 c:\users\lab-maestria-12.helpdesk-pc\documents\mygraph\mygraphs\commom.h
+	<windows.h>
+	<GL/glut.h>
+	<cmath>
+	<string>
+	<vector>
+	<fstream>
+	<sstream>
+	<iostream>
+	<time.h>
+	<omp.h>
+	<limits.h>
+	<queue>
+	<algorithm>
+
+1509172393 c:\users\lab-maestria-12.helpdesk-pc\documents\mygraph\mygraphs\cgraph.h
+	<cmath>
+
+1509216125 c:\users\lab-maestria-12.helpdesk-pc\documents\mygraph\mygraphs\path.h
+	"Commom.h"
+	"Input.h"
+	"AdjacencyM.h"
+	"CGraph.h"
+
+1509217209 c:\users\lab-maestria-12.helpdesk-pc\documents\mygraph\mygraphs\input.h
+	"Commom.h"
+
+1508864983 c:\users\lab-maestria-12.helpdesk-pc\documents\mygraph\mygraphs\adjacencym.h
+	"Path.h"
+	"CGraph.h"
+
+1509210579 c:\users\lab-maestria-12.helpdesk-pc\documents\mygraph\mygraphs\myopengl.h
+	"Path.h"
+	"Input.h"
+	"Commom.h"
+
